@@ -23,7 +23,6 @@ export function exportSessionToMarkdown(sessionId) {
   }
 
   md += `\n---\n\n## Nội dung\n\n`;
-
   const speakerIds = [...new Set(utterances.map(u => u.speaker).filter(Boolean))];
 
   for (const u of utterances) {
@@ -41,7 +40,28 @@ export function exportSessionToMarkdown(sessionId) {
     md += `\n`;
   }
 
-  md += `---\n\n*Xuất lúc ${formatDate(new Date())}*\n`;
+  // SPEAKER STATISTICS SESSION
+  const speakerCounts = {};
+  utterances.forEach(u => {
+    const sName = u.speaker ? (aliases[u.speaker] || `Speaker ${speakerIds.indexOf(u.speaker) + 1}`) : "Unknown";
+    speakerCounts[sName] = (speakerCounts[sName] || 0) + 1;
+  });
+
+  const totalUtterances = utterances.length;
+  md += `---\n\n## Thống kê diễn giả\n\n`;
+  md += `| Diễn giả | Số câu thoại | Tỷ lệ |\n`;
+  md += `| :--- | :---: | :---: |\n`;
+  
+  Object.entries(speakerCounts)
+    .sort(([, a], [, b]) => b - a)
+    .forEach(([name, count]) => {
+      const percentage = ((count / totalUtterances) * 100).toFixed(1);
+      md += `| **${name}** | ${count} | ${percentage}% |\n`;
+    });
+
+  md += `\n**Tổng cộng**: ${totalUtterances} câu thoại  \n`;
+
+  md += `---\n\n*Xuất lúc ${formatDate(new Date()) || "vừa xong"}*\n`;
 
   return { markdown: md, session };
 }
